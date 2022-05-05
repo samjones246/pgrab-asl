@@ -2,6 +2,7 @@ state("pearlgrabber")
 {
     int pearls : 0x01FF62D8, 0x240, 0x148, 0x110, 0x0, 0x50, 0x20, 0x08;
     int dialogLinePtr : 0x01FECE90, 0x820, 0x18, 0x140, 0x160, 0x10, 0x0, 0x428;
+    bool canMove : 0x01FF62D8, 0x240, 0x148, 0x110, 0x0, 0x50, 0x20, 0x38;
 }
 
 
@@ -35,19 +36,20 @@ startup
 
     // First lines of dialogue from conversations we want to split on
     vars.ConvoOpeners = new List<string> {
-        "Oh. Hey. Who are you?",
+        "Oh. Hey. Who are you?"
         "Wow! You found six pearls! That is, simply put, great!",
         "Hey… You ready for that gift?",
         "Woah. Nice. Y’now, you’re really good at this.",
         "I'll be honest. You’re scaring me! Please.",
         "Uh oh... I feel weird",
         "HEllO cHIlD. hOw aRE You.",
-        "hello!"
+        "hello!",
     };
 }
 
 init {
     current.dialogueLine = "";
+    vars.endConvoStarted = false;
 }
 
 start
@@ -75,10 +77,22 @@ split {
         }
     }
     if (current.dialogueLine != old.dialogueLine){
+        
         List<string> openers = vars.ConvoOpeners;
         int index = openers.IndexOf(current.dialogueLine);
-        if (index == openers.Count || settings["statue" + index]){
+        if (index == -1){
+            return false;
+        }
+        if (index == openers.Count - 1){
+            vars.endConvoStarted = true;
+            return false;
+        }
+        if (settings["statue" + index]){
             return true;
         }
+    }
+    if (vars.endConvoStarted && current.canMove){
+        vars.endConvoStarted = false;
+        return true;
     }
 }
