@@ -24,19 +24,6 @@ startup
     settings.Add("statue5", false, "After 30 Pearls", "splitStatue");
     settings.Add("statue6", false, "After 36 Pearls", "splitStatue");
 
-    // Read a UTF-16 string until a null byte
-    vars.ReadString = (Func<Process, IntPtr, string>)((p, ptr) => {
-        List<char> chars = new List<char>();
-        byte c = p.ReadValue<byte>(ptr);
-        int offset = 2;
-        while (c != 0x00) {
-            chars.Add((char)c);
-            c = p.ReadValue<byte>(ptr + offset);
-            offset += 2;
-        }
-        return new string(chars.ToArray());
-    });
-
     // First lines of dialogue from conversations we want to split on
     vars.ConvoOpeners = new List<string> {
         "Oh. Hey. Who are you?",
@@ -88,7 +75,7 @@ update {
     }
     if (current.dialogLinePtr != old.dialogLinePtr){
         IntPtr ptr = new IntPtr((UInt32)current.dialogLinePtr);
-        current.dialogueLine = vars.ReadString(game, ptr);
+        current.dialogueLine = game.ReadString(ptr, 256);
         vars.Log("Dialogue: " + current.dialogueLine);
     }else{
         current.dialogueLine = old.dialogueLine;
