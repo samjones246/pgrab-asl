@@ -3,6 +3,9 @@ state("pearlgrabber")
     int pearls : 0x01FF62D8, 0x240, 0x148, 0x110, 0x0, 0x50, 0x20, 0x08;
     int dialogLinePtr : 0x01FECE90, 0x820, 0x18, 0x140, 0x160, 0x10, 0x0, 0x428;
     bool canMove : 0x01FF62D8, 0x240, 0x148, 0x110, 0x0, 0x50, 0x20, 0x38;
+    float playerX : 0x01FEDCB0, 0xE8, 0x0, 0x48, 0x18, 0x180, 0x268, 0x40;
+    float playerZ : 0x01FEDCB0, 0xE8, 0x0, 0x48, 0x18, 0x180, 0x268, 0x48;
+    bool startVisible : 0x01FECE30, 0x300, 0x18, 0x8, 0x38, 0x70, 0x28, 0x255;
 }
 
 
@@ -36,7 +39,7 @@ startup
 
     // First lines of dialogue from conversations we want to split on
     vars.ConvoOpeners = new List<string> {
-        "Oh. Hey. Who are you?"
+        "Oh. Hey. Who are you?",
         "Wow! You found six pearls! That is, simply put, great!",
         "Hey… You ready for that gift?",
         "Woah. Nice. Y’now, you’re really good at this.",
@@ -45,15 +48,37 @@ startup
         "HEllO cHIlD. hOw aRE You.",
         "hello!",
     };
+
+    vars.initPlayerX = 60.344;
+    vars.initPlayerZ = 80.504;
 }
 
 init {
     current.dialogueLine = "";
     vars.endConvoStarted = false;
+    vars.started = false;
+    vars.Log("Initialized");
 }
 
 start
 {
+    // Split on either first movement or pressing start
+    if (!vars.started){
+        // First movement
+        if (old.playerX == (float)vars.initPlayerX && old.playerZ == (float)vars.initPlayerZ) {
+            if (current.playerX != old.playerX || current.playerZ != old.playerZ) {
+                vars.Log("Player moved");
+                vars.started = true;
+                return true;
+            }
+        }
+        // Start pressed
+        if(!current.startVisible && old.startVisible){
+            vars.Log("Start clicked");
+            return true;
+        }
+    }
+
     return false;
 }
 
